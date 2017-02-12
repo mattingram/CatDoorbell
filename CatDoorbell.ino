@@ -25,7 +25,8 @@ void loop(){
   if (val == HIGH) {            // check if the input is HIGH
     digitalWrite(ledPin, HIGH);  // turn LED ON
     if (alarmEnabled)
-      meow();
+      for(int i=0; i < 3; i++)
+        meow();
     delay(150);
     
     if (pirState == LOW) {
