@@ -10,7 +10,8 @@ int ledPin = 13;                // choose the pin for the LED
 int inputPin = 7;               // choose the input pin (for PIR sensor)
 int pirState = LOW;             // we start, assuming no motion detected
 int val = 0;                    // variable for reading the pin status
-int pinSpeaker = 3;           //Set up a speaker on a PWM pin (digital 9, 10, or 11)
+int pinSpeaker = 3;             //Set up a speaker on a PWM pin (digital 9, 10, or 11)
+bool alarmEnabled = true;
 
 void setup() {
   pinMode(ledPin, OUTPUT);      // declare LED as output
@@ -23,9 +24,9 @@ void loop(){
   val = digitalRead(inputPin);  // read input value
   if (val == HIGH) {            // check if the input is HIGH
     digitalWrite(ledPin, HIGH);  // turn LED ON
-    if (enableSound) alarm();
+    if (alarmEnabled)
+      meow();
     delay(150);
-
     
     if (pirState == LOW) {
       // we have just turned on
@@ -35,7 +36,7 @@ void loop(){
     }
   } else {
       digitalWrite(ledPin, LOW); // turn LED OFF
-      playTone(0, 0);
+      noTone(pinSpeaker);
       delay(300);    
       if (pirState == HIGH){
       // we have just turned off
@@ -45,16 +46,13 @@ void loop(){
     }
   }
 }
-// duration in mSecs, frequency in hertz
-void playTone(long duration, int freq) {
-    duration *= 1000;
-    int period = (1.0 / freq) * 1000000;
-    long elapsed_time = 0;
-    while (elapsed_time < duration) {
-        digitalWrite(pinSpeaker,HIGH);
-        delayMicroseconds(period / 2);
-        digitalWrite(pinSpeaker, LOW);
-        delayMicroseconds(period / 2);
-        elapsed_time += (period);
-    }
+
+
+void meow()
+{
+  tone(pinSpeaker, 1060);
+  delay(300);
+  tone(pinSpeaker, 860);
+  delay(600);
+  noTone(pinSpeaker);
 }
