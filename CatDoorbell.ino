@@ -1,17 +1,14 @@
 // Uses a PIR sensor to detect movement, buzzes a buzzer
-// more info here: http://blog.makezine.com/projects/pir-sensor-arduino-alarm/
-// email me, John Park, at jp@jpixl.net
-// based upon:
-// PIR sensor tester by Limor Fried of Adafruit
-// tone code by michael@thegrebs.com
 
+bool soundEnabled = true;
+int maxTimeout = 3;
  
 int ledPin = 13;                // choose the pin for the LED
 int inputPin = 7;               // choose the input pin (for PIR sensor)
-int pirState = LOW;             // we start, assuming no motion detected
-int val = 0;                    // variable for reading the pin status
-int pinSpeaker = 3;             //Set up a speaker on a PWM pin (digital 9, 10, or 11)
-bool alarmEnabled = true;
+int pinSpeaker = 3;             // Set up a speaker on a PWM pin (digital 9, 10, or 11)
+
+int loopCount = 0;
+bool motionDetected = false;
 
 void setup() {
   pinMode(ledPin, OUTPUT);      // declare LED as output
@@ -20,40 +17,61 @@ void setup() {
   Serial.begin(9600);
 }
 
-void loop(){
-  val = digitalRead(inputPin);  // read input value
-  if (val == HIGH) {            // check if the input is HIGH
-    digitalWrite(ledPin, HIGH);  // turn LED ON
-    if (alarmEnabled)
-      for(int i=0; i < 3; i++)
-        meow();
-    delay(150);
-    
-    if (pirState == LOW) {
-      // we have just turned on
+void loop() {
+  int sensor = digitalRead(inputPin);  // read sensor
+
+  if (sensor == HIGH) {                // motion detected
+    // if previously no motion was detected
+    if (motionDetected == false) {
       Serial.println("Motion detected!");
-      // We only want to print on the output change, not state
-      pirState = HIGH;
-    }
-  } else {
-      digitalWrite(ledPin, LOW); // turn LED OFF
-      noTone(pinSpeaker);
-      delay(300);    
-      if (pirState == HIGH){
-      // we have just turned off
-      Serial.println("Motion ended!");
-      // We only want to print on the output change, not state
-      pirState = LOW;
+      digitalWrite(ledPin, HIGH);        // turn LED ON
+      meow(2);
+      loopCount = 0;
+      motionDetected = true;
     }
   }
+  else if (sensor == LOW)      // no motionx
+  {
+    // if previous state was motion detected
+    if (motionDetected == true)
+    {
+      Serial.println("Motion ended!");
+      digitalWrite(ledPin, LOW); // turn LED OFF
+      noTone(pinSpeaker);        // turn speaker off
+      loopCount = 0;
+      motionDetected = false;
+    }
+  }
+  
+  if (loopCount >= maxTimeout)
+  {
+    Serial.println("Timeout expired.");
+    digitalWrite(ledPin, LOW); // turn LED OFF
+    noTone(pinSpeaker);        // turn speaker off
+    loopCount = 0;
+    motionDetected = false;
+  }
+  
+  loopCount++;
+  //Serial.println(loopCount);
+  Serial.println(sensor);
+  delay(1000);                // delay 1 second
 }
 
 
-void meow()
+void meow(int times)
 {
-  tone(pinSpeaker, 1060);
-  delay(300);
-  tone(pinSpeaker, 860);
-  delay(600);
-  noTone(pinSpeaker);
+  for(int i=0; i < times; i++)
+  {
+    Serial.println("Meow");
+    if (soundEnabled)
+      tone(pinSpeaker, 1060);
+    delay(300);
+    if (soundEnabled)
+    {
+      tone(pinSpeaker, 860);
+      delay(600);
+    }
+    noTone(pinSpeaker);
+  }
 }
